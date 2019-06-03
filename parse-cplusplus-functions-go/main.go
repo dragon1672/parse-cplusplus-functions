@@ -8,8 +8,47 @@ import (
 	"parse-cplusplus-functions-go/funcs"
 )
 
+func keyFunctionsByName(signatures []*funcs.MethodSignature) map[string][]*funcs.MethodSignature {
+	m := make(map[string][]*funcs.MethodSignature)
+	for _,f := range signatures {
+		baseName := f.GetBaseFunctionName()
+		if _,ok := m[baseName]; !ok {
+			// Init the array in the map
+			m[baseName] = []*funcs.MethodSignature{}
+		}
+		m[baseName] = append(m[baseName], f)
+	}
+	return m
+}
+
+func functionInList(f *funcs.MethodSignature, l []*funcs.MethodSignature) bool {
+	for _, toCheck := range l {
+		if f.Matches(toCheck) {
+			return true
+		}
+	}
+	return false
+}
+
 func getMissingFunctions(expectedFunctions []*funcs.MethodSignature, providedFunctions []*funcs.MethodSignature) []*funcs.MethodSignature {
-	return nil // TODO
+	expectedMap := keyFunctionsByName(expectedFunctions)
+	providedMap := keyFunctionsByName(providedFunctions)
+	missingFunctions := []*funcs.MethodSignature{}
+	for expectedFunctionName, expectedFunctions := range expectedMap {
+		for _,expectedFunction := range expectedFunctions {
+			//check if this method is in provided methods
+			if providedFunctions ,ok := providedMap[expectedFunctionName]; ok {
+				if !functionInList(expectedFunction, providedFunctions) {
+					missingFunctions = append(missingFunctions, expectedFunction)
+				}
+			} else {
+				missingFunctions = append(missingFunctions, expectedFunction)
+			}
+		}
+	}
+
+
+	return missingFunctions
 }
 
 func getExpectedFunctions(filePath string) ([]*funcs.MethodSignature, error) {

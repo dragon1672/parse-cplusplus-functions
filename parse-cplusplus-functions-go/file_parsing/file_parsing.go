@@ -49,21 +49,21 @@ func ParseCPPAndHeaderFiles(dir string) ([]*funcs.MethodSignature, []*funcs.Meth
 
 
 		if strings.HasSuffix(strings.ToLower(filePath), strings.ToLower(".h")) {
-			headerFiles = append(headerFiles, parseExpectedFunctions(fileData)...)
+			headerFiles = append(headerFiles, parseExpectedFunctions(fileData, filePath)...)
 		} else if strings.HasSuffix(strings.ToLower(filePath), strings.ToLower(".cpp")) {
-			cppFiles = append(cppFiles, parseExpectedFunctions(fileData)...)
+			cppFiles = append(cppFiles, parseExpectedFunctions(fileData, filePath)...)
 		}
 		// don't care about other files
 	}
 	return headerFiles, cppFiles, nil
 }
 
-func parseExpectedFunctions(fileData []byte) []*funcs.MethodSignature {
+func parseExpectedFunctions(fileData []byte, debug string) []*funcs.MethodSignature {
 	discoveredFunctions := []*funcs.MethodSignature{}
 	re := regexp.MustCompile(functionRegex)
 	matches := re.FindAll(fileData, -1)
 	for _,match := range matches {
-		discoveredFunctions = append(discoveredFunctions, funcs.CreateSignature(string(match)))
+		discoveredFunctions = append(discoveredFunctions, funcs.CreateSignature(string(match), debug))
 	}
 	return discoveredFunctions
 }
