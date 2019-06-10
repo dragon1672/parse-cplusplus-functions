@@ -6,22 +6,23 @@ import (
 	"github.com/golang/glog"
 	"parse-cplusplus-functions-go/file_parsing"
 	"parse-cplusplus-functions-go/funcs"
+	"parse-cplusplus-functions-go/master_functions"
 )
 
-func keyFunctionsByName(signatures []*funcs.MethodSignature) map[string][]*funcs.MethodSignature {
-	m := make(map[string][]*funcs.MethodSignature)
-	for _,f := range signatures {
+func keyFunctionsByName(signatures []funcs.MethodSignature) map[string][]funcs.MethodSignature {
+	m := make(map[string][]funcs.MethodSignature)
+	for _, f := range signatures {
 		baseName := f.GetBaseFunctionName()
-		if _,ok := m[baseName]; !ok {
+		if _, ok := m[baseName]; !ok {
 			// Init the array in the map
-			m[baseName] = []*funcs.MethodSignature{}
+			m[baseName] = []funcs.MethodSignature{}
 		}
 		m[baseName] = append(m[baseName], f)
 	}
 	return m
 }
 
-func functionInList(f *funcs.MethodSignature, l []*funcs.MethodSignature) bool {
+func functionInList(f funcs.MethodSignature, l []funcs.MethodSignature) bool {
 	for _, toCheck := range l {
 		if f.Matches(toCheck) {
 			return true
@@ -30,14 +31,14 @@ func functionInList(f *funcs.MethodSignature, l []*funcs.MethodSignature) bool {
 	return false
 }
 
-func getMissingFunctions(expectedFunctions []*funcs.MethodSignature, providedFunctions []*funcs.MethodSignature) []*funcs.MethodSignature {
+func getMissingFunctions(expectedFunctions []funcs.MethodSignature, providedFunctions []funcs.MethodSignature) []funcs.MethodSignature {
 	expectedMap := keyFunctionsByName(expectedFunctions)
 	providedMap := keyFunctionsByName(providedFunctions)
-	missingFunctions := []*funcs.MethodSignature{}
+	missingFunctions := []funcs.MethodSignature{}
 	for expectedFunctionName, expectedFunctions := range expectedMap {
-		for _,expectedFunction := range expectedFunctions {
+		for _, expectedFunction := range expectedFunctions {
 			//check if this method is in provided methods
-			if providedFunctions ,ok := providedMap[expectedFunctionName]; ok {
+			if providedFunctions, ok := providedMap[expectedFunctionName]; ok {
 				if !functionInList(expectedFunction, providedFunctions) {
 					missingFunctions = append(missingFunctions, expectedFunction)
 				}
@@ -47,22 +48,15 @@ func getMissingFunctions(expectedFunctions []*funcs.MethodSignature, providedFun
 		}
 	}
 
-
 	return missingFunctions
 }
 
-func getExpectedFunctions(filePath string) ([]*funcs.MethodSignature, error) {
-	// Load from path
-	// convert to functions
-	return nil, nil // TODO
-}
-
-func getProvidedFunctions(dir string) ([]*funcs.MethodSignature, error) {
+func getProvidedFunctions(dir string) ([]funcs.MethodSignature, error) {
 	headerFunctions, cppFunctions, err := file_parsing.ParseCPPAndHeaderFiles(dir)
 	if err != nil {
 		return nil, err
 	}
-	discoveredFunctions := []*funcs.MethodSignature{}
+	discoveredFunctions := []funcs.MethodSignature{}
 	// TODO remove duplicates
 	discoveredFunctions = append(discoveredFunctions, headerFunctions...)
 	discoveredFunctions = append(discoveredFunctions, cppFunctions...)
@@ -70,14 +64,13 @@ func getProvidedFunctions(dir string) ([]*funcs.MethodSignature, error) {
 }
 
 var (
-	codePath = flag.String("codePath", "", "directory containing cpp and header files")
+	codePath       = flag.String("codePath", "", "directory containing cpp and header files")
 	masterDictPath = flag.String("masterDictPath ", "", "filepath of csv file with expected paths")
 )
 
-
 func main() {
 
-	expectedFunctions, err := getExpectedFunctions(*masterDictPath)
+	expectedFunctions, err := master_functions.GetExpectedFunctions(*masterDictPath)
 	if err != nil {
 		glog.Fatal(err)
 	}
