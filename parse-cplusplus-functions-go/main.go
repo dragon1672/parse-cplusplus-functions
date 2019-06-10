@@ -57,8 +57,10 @@ func getProvidedFunctions(dir string) ([]funcs.MethodSignature, error) {
 		return nil, err
 	}
 	discoveredFunctions := []funcs.MethodSignature{}
-	// TODO remove duplicates
-	discoveredFunctions = append(discoveredFunctions, headerFunctions...)
+	glog.Infof("Discovered %d header functions", len(headerFunctions))
+	//discoveredFunctions = append(discoveredFunctions, headerFunctions...)
+
+	glog.Infof("Discovered %d cpp functions", len(cppFunctions))
 	discoveredFunctions = append(discoveredFunctions, cppFunctions...)
 	return discoveredFunctions, nil
 }
